@@ -1,23 +1,18 @@
 # modules/agents/robot_agent.py
 
-from modules.search_algorithms import (
-    dfs, bfs, ucs, astar, hill_climbing, simulated_annealing
-)
-
+from modules.search_algorithms.uninformed_search import dfs, bfs, ucs
+from modules.search_algorithms.informed_search import astar
+from modules.search_algorithms.local_search import hill_climbing, simulated_annealing
+import time
 
 class RobotAgent:
     def __init__(self, position, algorithm='astar'):
         self.position = position
-        self.path = []
-        self.tasks_completed = []
-        self.path_traveled = [position]  # Keep track of the path traversed
-        self.current_task = None
         self.algorithm = algorithm
-
-    def move(self):
-        if self.path:
-            self.position = self.path.pop(0)
-            self.path_traveled.append(self.position)
+        self.path = []
+        self.path_traveled = []
+        self.current_task = None
+        self.tasks_completed = []
 
     def find_path(self, start, goal, grid, blocked_positions, grid_size):
         if self.algorithm == 'dfs':
@@ -34,3 +29,9 @@ class RobotAgent:
             return simulated_annealing(start, goal, grid, blocked_positions, grid_size)
         else:
             raise ValueError(f"Unknown algorithm: {self.algorithm}")
+
+    def move(self):
+        if self.path:
+            next_position = self.path.pop(0)
+            self.position = next_position
+            self.path_traveled.append(self.position)

@@ -3,6 +3,7 @@
 import random
 import math
 
+# Existing local search algorithms
 
 def hill_climbing(start, goal, grid, blocked_positions, grid_size):
     current = start
@@ -18,7 +19,6 @@ def hill_climbing(start, goal, grid, blocked_positions, grid_size):
         current = next_node
         path.append(current)
     return path
-
 
 def simulated_annealing(start, goal, grid, blocked_positions, grid_size):
     current = start
@@ -41,13 +41,11 @@ def simulated_annealing(start, goal, grid, blocked_positions, grid_size):
     else:
         return None  # Failed to find a path
 
-
 def heuristic(a, b):
     # Using Manhattan distance as heuristic
     (x1, y1) = a
     (x2, y2) = b
     return abs(x1 - x2) + abs(y1 - y2)
-
 
 def get_neighbors(position, grid, blocked_positions, grid_size):
     x, y = position
@@ -60,3 +58,38 @@ def get_neighbors(position, grid, blocked_positions, grid_size):
             if grid[ny][nx] == 0 and (nx, ny) not in blocked_positions:
                 neighbors.append((nx, ny))
     return neighbors
+
+# Genetic Algorithm for 8-Queens problem
+
+# Population parameters
+POPULATION_SIZE = 100
+MUTATION_RATE = 0.1
+
+def generate_individual():
+    """Generates an individual with random queen positions."""
+    return [random.randint(0, 7) for _ in range(8)]
+
+def fitness(individual):
+    """Calculates the fitness score. Higher is better."""
+    conflicts = 0
+    for i in range(len(individual)):
+        for j in range(i + 1, len(individual)):
+            if individual[i] == individual[j] or abs(individual[i] - individual[j]) == abs(i - j):
+                conflicts += 1
+    return 28 - conflicts  # 28 is the maximum number of non-conflicting pairs
+
+def crossover(parent1, parent2):
+    """Performs crossover between two parents to create an offspring."""
+    point = random.randint(0, 7)
+    return parent1[:point] + parent2[point:]
+
+def mutate(individual):
+    """Mutates an individual randomly."""
+    if random.random() < MUTATION_RATE:
+        index = random.randint(0, 7)
+        individual[index] = random.randint(0, 7)
+
+def select_population(population):
+    """Selects the population based on fitness."""
+    population = sorted(population, key=lambda x: fitness(x), reverse=True)
+    return population[:POPULATION_SIZE]

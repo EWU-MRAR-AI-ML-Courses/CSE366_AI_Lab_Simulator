@@ -9,49 +9,37 @@ class GridEnvironment:
         self.room_start = room_start
         self.room_end = room_end
         self.door_position = door_position
-
-        self.grid, self.obstacles = self.create_environment()
+        self.grid = [[0 for _ in range(grid_size)] for _ in range(grid_size)]
+        self.obstacles = set()
+        self.create_environment()
 
     def create_environment(self):
-        grid = [[0 for _ in range(self.grid_size)] for _ in range(self.grid_size)]
-        obstacles = set()
-
         # Build walls
         for x in range(self.room_start[0], self.room_end[0] + 1):
             for y in range(self.room_start[1], self.room_end[1] + 1):
                 if (x == self.room_start[0] or x == self.room_end[0] or
-                        y == self.room_start[1] or y == self.room_end[1]):
+                    y == self.room_start[1] or y == self.room_end[1]):
                     if (x, y) != self.door_position:  # Leave the door open
-                        obstacles.add((x, y))
-                        grid[y][x] = 1  # Mark as obstacle
-
-        return grid, obstacles
+                        self.obstacles.add((x, y))
+                        self.grid[y][x] = 1  # Mark as obstacle
 
     def generate_tasks(self, num_tasks, start_pos, task_positions=None):
         tasks = {}
-        i = 1
+        available_positions = set((x, y) for x in range(self.grid_size) for y in range(self.grid_size))
+        available_positions -= self.obstacles
+        available_positions.discard(start_pos)
+
         if task_positions is not None:
-            # Use provided task positions
-            for position in task_positions:
-                if (0 <= position[0] < self.grid_size and 0 <= position[1] < self.grid_size and
-                        position not in self.obstacles and
-                        position != start_pos and
-                        self.grid[position[1]][position[0]] == 0):
-                    task_name = f'Task {i}'
-                    tasks[task_name] = {'position': position, 'completed': False}
-                    i += 1
+            for i, pos in enumerate(task_positions):
+                if pos in available_positions:
+                    tasks[f"Task {i + 1}"] = {'position': pos, 'completed': False}
+                    available_positions.discard(pos)
                 else:
-                    print(f"Invalid task position {position}; it's either an obstacle or the start position.")
+                    raise ValueError(f"Invalid task position: {pos}")
         else:
-            # Generate random tasks
-            while len(tasks) < num_tasks:
-                x = random.randint(0, self.grid_size - 1)
-                y = random.randint(0, self.grid_size - 1)
-                position = (x, y)
-                if (position not in self.obstacles and
-                        position != start_pos and
-                        self.grid[y][x] == 0):
-                    task_name = f'Task {i}'
-                    tasks[task_name] = {'position': position, 'completed': False}
-                    i += 1
+            for i in range(num_tasks):
+                pos = random.choice(list(available_positions))
+                tasks[f"Task {i + 1}"] = {'position': pos, 'completed': False}
+                available_positions.discard(pos)
+
         return tasks

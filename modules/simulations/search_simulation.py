@@ -53,12 +53,12 @@ class SearchSimulation(SimulationBase):
 
     def initialize_environment(self):
         # Define room and door positions
-        room_start = (4, 4)
-        room_end = (self.grid_size - 5, self.grid_size - 5)
-        door_position = (self.grid_size // 2, room_start[1])  # Door at the top wall
+        self.room_start = (4, 4)
+        self.room_end = (self.grid_size - 5, self.grid_size - 5)
+        self.door_position = (self.grid_size // 2, self.room_start[1])  # Door at the top wall
 
         # Create grid and obstacles
-        env = GridEnvironment(self.grid_size, room_start, room_end, door_position)
+        env = GridEnvironment(self.grid_size, self.room_start, self.room_end, self.door_position)
         self.grid = env.grid
         self.obstacles = env.obstacles
 
