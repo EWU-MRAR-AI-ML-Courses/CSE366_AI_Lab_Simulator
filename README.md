@@ -101,37 +101,31 @@ CSE366_AI_Lab_Simulator/
 │   ├── __init__.py
 │   ├── agents/
 │   │   ├── __init__.py
-│   │   └── robot_agent.py
+│   │   ├── robot_agent.py
+│   │   └── maze_agent.py
 │   ├── environments/
 │   │   ├── __init__.py
-│   │   └── grid_environment.py
+│   │   ├── grid_environment.py
+│   │   └── maze_environment.py
 │   ├── search_algorithms/
 │   │   ├── __init__.py
 │   │   ├── uninformed_search.py
 │   │   ├── informed_search.py
 │   │   └── local_search.py
-│   ├── csp_algorithms/
-│   │   ├── __init__.py
-│   │   └── csp_solver.py
-│   ├── adversarial_search/
-│   │   ├── __init__.py
-│   │   └── minimax.py
-│   ├── reinforcement_learning/
-│   │   ├── __init__.py
-│   │   └── q_learning.py
 │   ├── simulations/
 │   │   ├── __init__.py
 │   │   ├── simulation_base.py
 │   │   ├── search_simulation.py
-│   │   ├── csp_simulation.py
-│   │   ├── adversarial_simulation.py
-│   │   └── rl_simulation.py
+│   │   └── maze_simulation.py
 │   └── utils/
 │       ├── __init__.py
 │       └── constants.py
 └── examples/
     ├── __init__.py
-    └── main.py
+    ├── main.py
+    ├── main_8_queen.py
+    └── main_maze_solver.py
+
 ```
 
 The simulator's codebase is organized into the following directories:
@@ -151,6 +145,7 @@ The simulator's codebase is organized into the following directories:
 ## Robot Delivery Simulator
 ### Running with Default Settings
 ```
+cd examples
 python main.py
 ```
 ### Using BFS Algorithm
