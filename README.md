@@ -152,7 +152,7 @@ python main.py
 ```
 #### Example Simulation
 
-[Simulation Example](https://github.com/EWU-MRAR-AI-ML-Courses/CSE366_AI_Lab_Simulator/tree/main/images/search.gif)
+![Simulation Example](https://github.com/EWU-MRAR-AI-ML-Courses/CSE366_AI_Lab_Simulator/tree/main/images/search.gif)
 
 ### Using BFS Algorithm
 ```
