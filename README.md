@@ -146,6 +146,9 @@ The simulator's codebase is organized into the following directories:
 ---
 
 ## Examples
+
+---
+## Robot Delivery Simulator
 ### Running with Default Settings
 ```
 python main.py
@@ -166,9 +169,49 @@ python main.py --task_positions "[(3,3),(5,5),(7,7)]"
 ```
 python main.py --algorithm ucs --grid_size 25 --task_positions "[(2,2),(4,4),(6,6)]"
 ```
+---
+## Running the Maze Solver Simulation
+
+### Run the Simulation
+
+Navigate to the examples directory and run:
+
+```
+cd examples
+python main_maze_solver.py
+```
+
+### Select Algorithm
+
+```
+python main_maze_solver.py --algorithm bfs
+```
+
+### Set Maze Dimensions
+
+```
+python main_maze_solver.py --maze_width 31 --maze_height 31
+```
+
+### Adjust Complexity and Density
+
+```
+python main_maze_solver.py --complexity 0.9 --density 0.9
+```
+
+### Example Usage
+
+```
+python main_maze_solver.py --algorithm astar --maze_width 25 --maze_height 25 --complexity 0.8 --density 0.8
+```
+
+### Interacting with the Simulation
+* Start Button: Click to begin the simulation. The agent will start moving along the path found.
+* Reset Button: Click to generate a new maze and reset the agent.
+* Observe the Path Length: The UI panel displays the length of the path found.
+* Compare Algorithms: Run the simulation with different algorithms to see how they perform.
 
 ---
-
 ## Future Extensions
 The simulator is designed to be extensible and will include the following modules in future updates:
 

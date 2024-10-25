@@ -18,11 +18,14 @@ from modules.utils.constants import (
 )
 
 class MazeSimulation(SimulationBase):
-    def __init__(self, screen, algorithm='dfs', maze_width=21, maze_height=21):
+    def __init__(self, screen, algorithm='dfs', maze_width=21, maze_height=21,
+                 complexity=0.75, density=0.75):
         super().__init__(screen)
         self.algorithm = algorithm
         self.maze_width = maze_width
         self.maze_height = maze_height
+        self.complexity = complexity
+        self.density = density
 
         # Initialize fonts
         self.font_size = 20
@@ -33,38 +36,31 @@ class MazeSimulation(SimulationBase):
         # Initialize clock for controlling animation speed
         self.clock = pygame.time.Clock()
 
-        # Start button
-        self.update_start_button()
+        # Start and Reset buttons
+        self.update_buttons()
 
         # Generate maze
-        self.maze_env = MazeEnvironment(self.maze_width, self.maze_height)
-        self.grid = self.maze_env.get_grid()
-
-        # Set cell size
-        self.cell_size = min((DEFAULT_WINDOW_WIDTH - PANEL_WIDTH) // self.maze_width, DEFAULT_WINDOW_HEIGHT // self.maze_height)
-        self.margin = 1
-
-        # Set start and goal positions
-        self.start_pos = (1, 0)
-        self.goal_pos = (self.maze_width - 2, self.maze_height - 1)
-
-        # Initialize agent
-        self.agent = MazeAgent(self.start_pos, self.goal_pos, algorithm=self.algorithm)
-        self.animation_started = False
+        self.reset_simulation()
 
         # Variables for UI
         self.mouse_grid_pos = None
 
-    def update_start_button(self):
+    def update_buttons(self):
         window_width, window_height = self.screen.get_size()
-        # Position the start button at the bottom right corner
+        # Position the start button
         button_width = 100
         button_height = 40
         margin = 10  # Margin from the edges
         button_x = window_width - PANEL_WIDTH - button_width - margin
         button_y = window_height - button_height - margin
-        button_rect = pygame.Rect(button_x, button_y, button_width, button_height)
-        self.start_button = Button(button_rect, LIGHT_GRAY, "Start", BLACK, self.font_medium)
+        self.start_button = Button(pygame.Rect(button_x, button_y, button_width, button_height),
+                                   LIGHT_GRAY, "Start", BLACK, self.font_medium)
+
+        # Position the reset button
+        reset_button_x = button_x
+        reset_button_y = button_y - button_height - margin
+        self.reset_button = Button(pygame.Rect(reset_button_x, reset_button_y, button_width, button_height),
+                                   LIGHT_GRAY, "Reset", BLACK, self.font_medium)
 
     def handle_events(self):
         for event in pygame.event.get():
@@ -78,7 +74,11 @@ class MazeSimulation(SimulationBase):
                     self.agent.find_path(self.grid)
                     if not self.agent.path:
                         print(f"No path found using {self.algorithm.upper()}")
-                        self.quit()
+                        self.animation_started = False
+                    else:
+                        self.path_length = len(self.agent.path_traveled) + len(self.agent.path)
+                elif self.reset_button.is_clicked(event.pos):
+                    self.reset_simulation()
 
             # Exit on pressing ESC key
             if event.type == pygame.KEYDOWN:
@@ -96,6 +96,24 @@ class MazeSimulation(SimulationBase):
                 else:
                     self.mouse_grid_pos = None  # Reset if mouse is outside the grid
 
+    def reset_simulation(self):
+        # Generate new maze and reset agent
+        self.maze_env = MazeEnvironment(self.maze_width, self.maze_height,
+                                        complexity=self.complexity, density=self.density)
+        self.grid = self.maze_env.get_grid()
+        # Set cell size
+        self.cell_size = min((DEFAULT_WINDOW_WIDTH - PANEL_WIDTH) // self.maze_width, DEFAULT_WINDOW_HEIGHT // self.maze_height)
+        self.margin = 1
+        # Set start and goal positions
+        self.start_pos = (1, 0)
+        self.goal_pos = (self.maze_width - 2, self.maze_height - 1)
+        # Initialize agent
+        self.agent = MazeAgent(self.start_pos, self.goal_pos, algorithm=self.algorithm)
+        self.animation_started = False
+        self.agent.path_traveled = []
+        self.agent.path = []
+        self.path_length = None
+
     def update(self):
         # Handle window resize
         window_width, window_height = self.screen.get_size()
@@ -111,12 +129,15 @@ class MazeSimulation(SimulationBase):
         self.font_large = pygame.font.SysFont(None, int(self.font_size * 1.5))
 
         self.start_button.font = self.font_medium
+        self.reset_button.font = self.font_medium
 
-        # Update start button position on resize
-        self.update_start_button()
+        # Update button positions on resize
+        self.update_buttons()
 
         if self.animation_started:
             self.agent.move()
+            # Update path length
+            self.path_length = len(self.agent.path_traveled) + len(self.agent.path)
             # Stop the simulation when the agent reaches the goal
             if self.agent.position == self.goal_pos:
                 self.animation_started = False
@@ -163,8 +184,9 @@ class MazeSimulation(SimulationBase):
         # Draw UI elements on the right panel
         self.draw_ui(panel_rect.x + 20, 20)
 
-        # Draw Start button
+        # Draw Start and Reset buttons
         self.start_button.draw(self.screen)
+        self.reset_button.draw(self.screen)
 
         # Draw the agent
         self.draw_agent()
@@ -186,13 +208,24 @@ class MazeSimulation(SimulationBase):
         self.screen.blit(status_text, (panel_x, y_offset))
         y_offset += int(self.font_size * 1.5)
 
+        # Display Path Length
+        if self.path_length is not None:
+            path_length_text = self.font_small.render(f"Path Length: {self.path_length}", True, BLACK)
+            self.screen.blit(path_length_text, (panel_x, y_offset))
+            y_offset += int(self.font_size)
+
+        # Display Algorithm Used
+        algorithm_text = self.font_small.render(f"Algorithm: {self.algorithm.upper()}", True, BLACK)
+        self.screen.blit(algorithm_text, (panel_x, y_offset))
+        y_offset += int(self.font_size)
+
         # Display Mouse Grid Position
         if self.mouse_grid_pos is not None:
             mouse_pos_text = self.font_small.render(f"Cursor Position: {self.mouse_grid_pos}", True, BLACK)
             self.screen.blit(mouse_pos_text, (panel_x, y_offset))
-            y_offset += int(self.font_size * 1.5)
+            y_offset += int(self.font_size)
         else:
-            y_offset += int(self.font_size * 1.5)
+            y_offset += int(self.font_size)
 
     def draw_agent(self):
         # Draw agent on top of the maze
