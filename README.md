@@ -2,13 +2,6 @@
 
 CSE366 AI Lab Simulator is a comprehensive Python library designed for the **CSE 366 Artificial Intelligence Lab** course. It provides simulation tools for various AI concepts, including search algorithms, local search, constraint satisfaction problems (CSP), adversarial search, and reinforcement learning. This library is intended to aid in teaching and understanding AI algorithms through visual simulations.
 
-## Creator Information
-
-**Name**: Md Rifat Ahmmad Rashid  
-**Position**: Associate Professor  
-**Department**: Computer Science and Engineering (CSE)  
-**Institution**: East West University, Bangladesh  
-
 ---
 
 ## Table of Contents
@@ -194,11 +187,9 @@ These modules will provide practical implementations and visualizations to help 
 
 ## Contact
 
-For any questions or feedback, please contact:
-
-Md Rifat Ahmmad Rashid
-Associate Professor
-Department of Computer Science and Engineering
-East West University, Bangladesh
-Email - rifat.rashid@ewubd.edu
+**Name**: Md Rifat Ahmmad Rashid  
+**Position**: Associate Professor  
+**Department**: Computer Science and Engineering (CSE)  
+**Institution**: East West University, Bangladesh  
+**E-mail**: rifat.rashid@ewubd.edu  
 
