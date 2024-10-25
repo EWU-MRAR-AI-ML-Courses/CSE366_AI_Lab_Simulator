@@ -109,28 +109,42 @@ The simulator's codebase is organized into the following directories:
 ## Examples
 
 ---
-## Robot Delivery Simulator
-### Running with Default Settings
+## Robot Task Simulator
+
+### Running Task Order-Based Simulation
+To run the task order-based simulation:
+
 ```
 cd examples
-python main.py
+python main.py --grid_size 16 --num_tasks 5 --algorithm astar
 ```
-### Using BFS Algorithm
+
+### Running Nearest Task First Simulation
+To run the nearest task first simulation:
+
 ```
-python main.py --algorithm bfs
+cd examples
+python main_robot_nearest.py --grid_size 16 --num_tasks 5 --algorithm astar
 ```
-### Setting a Custom Grid Size
+
+### Command-Line Arguments
+* --algorithm: Specify the search algorithm (dfs, bfs, ucs, or astar).
+* --grid_size: Set the size of the grid (default is 16).
+* --num_tasks: Set the number of tasks in the environment (default is 5).
+
+### Example Usage
+Run a simulation with BFS, a grid size of 20, and 10 tasks:
+
 ```
-python main.py --grid_size 20
+python main.py --algorithm bfs --grid_size 20 --num_tasks 10
 ```
-### Specifying Task Positions
+
+Run the nearest task simulation with A*, a grid size of 25, and 8 tasks:
+
 ```
-python main.py --task_positions "[(3,3),(5,5),(7,7)]"
+python main_robot_nearest.py --algorithm astar --grid_size 25 --num_tasks 8
 ```
-### Combining Arguments
-```
-python main.py --algorithm ucs --grid_size 25 --task_positions "[(2,2),(4,4),(6,6)]"
-```
+
 ---
 ## Running the Maze Solver Simulation
 
