@@ -54,39 +54,6 @@ pip install -r requirements.txt
 ```
 *Note: Ensure that you have the latest version of pip installed.*
 
-
----
-
-## Usage
-
-### Running the Simulation
-Navigate to the examples directory and run main.py:
-
-```
-cd examples
-python main.py
-```
-This will launch the robot task simulation with default settings.
-
-### Command-Line Arguments
-==========================
-
-You can customize the simulation by providing command-line arguments:
-
-* `--algorithm`: Specify the search algorithm to use.
-	+ Options: `dfs`, `bfs`, `ucs`, `astar`, `hill_climbing`, `simulated_annealing`
-	+ Default: `astar`
-* `--grid_size`: Set the size of the grid.
-	+ Default: `16`
-* `--task_positions`: Provide a list of task positions.
-	+ Format: `"[(x1,y1),(x2,y2),..."]"`
-	+ Default: Randomly generated positions
-
-#### Example Usage:
-
-```
-python main.py --algorithm bfs --grid_size 20 --task_positions "[(2,3),(5,5),(10,10)]"
-```
 ---
 
 ## Directory Structure
