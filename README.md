@@ -69,7 +69,6 @@ python main.py
 This will launch the robot task simulation with default settings.
 
 ### Command-Line Arguments
-**Command-Line Arguments**
 ==========================
 
 You can customize the simulation by providing command-line arguments:
@@ -135,8 +134,6 @@ CSE366_AI_Lab_Simulator/
     └── main.py
 ```
 
-# Directory Structure
-
 The simulator's codebase is organized into the following directories:
 
 * **modules/**: Contains all the core modules of the simulator.
@@ -154,19 +151,19 @@ The simulator's codebase is organized into the following directories:
 python main.py
 ```
 
-Using BFS Algorithm
+### Using BFS Algorithm
 ```
 python main.py --algorithm bfs
 ```
-Setting a Custom Grid Size
+### Setting a Custom Grid Size
 ```
 python main.py --grid_size 20
 ```
-Specifying Task Positions
+### Specifying Task Positions
 ```
 python main.py --task_positions "[(3,3),(5,5),(7,7)]"
 ```
-Combining Arguments
+### Combining Arguments
 ```
 python main.py --algorithm ucs --grid_size 25 --task_positions "[(2,2),(4,4),(6,6)]"
 ```
