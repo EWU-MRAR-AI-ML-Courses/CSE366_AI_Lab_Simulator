@@ -150,6 +150,9 @@ The simulator's codebase is organized into the following directories:
 ```
 python main.py
 ```
+### Example Simulation
+
+![Simulation Example](CSE366_AI_Lab_Simulator\images\search.gif)
 
 ### Using BFS Algorithm
 ```
