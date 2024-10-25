@@ -18,3 +18,6 @@ YELLOW = (255, 215, 0)  # Color for the robot's traversed path
 BROWN = (139, 69, 19)   # Color for obstacles
 LIGHT_GRAY = (220, 220, 220)
 DARK_BLUE = (0, 0, 139)
+# Additional colors
+RED = (255, 0, 0)  # For the goal position in the maze
+
