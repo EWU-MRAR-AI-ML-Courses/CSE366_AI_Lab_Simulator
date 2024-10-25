@@ -1,8 +1,6 @@
 # modules/simulations/search_simulation.py
 
 import pygame
-from pygame.locals import RESIZABLE
-from collections import deque
 import sys
 import os
 
@@ -11,24 +9,21 @@ current_dir = os.path.dirname(os.path.abspath(__file__))
 parent_dir = os.path.dirname(os.path.dirname(current_dir))
 sys.path.append(parent_dir)
 
-from modules.agents.robot_agent import RobotAgent
+from modules.simulations.simulation_base import SimulationBase
 from modules.environments.grid_environment import GridEnvironment
+from modules.agents.robot_agent import RobotAgent
 from modules.utils.constants import (
-    PANEL_WIDTH, WHITE, GRAY, GREEN, BLUE, PURPLE, BLACK, YELLOW, BROWN, LIGHT_GRAY
+    DEFAULT_WINDOW_WIDTH, DEFAULT_WINDOW_HEIGHT, WHITE, BLACK, BLUE, GREEN, RED,
+    PANEL_WIDTH, LIGHT_GRAY, GRAY
 )
 
-from .simulation_base import SimulationBase
-
-
 class SearchSimulation(SimulationBase):
-    def __init__(self, screen, grid_size=16, algorithm='astar', task_positions=None):
+    def __init__(self, screen, algorithm='astar', grid_size=16, num_tasks=5, nearest_task=False):
         super().__init__(screen)
-        self.grid_size = grid_size
         self.algorithm = algorithm
-        self.task_positions = task_positions
-
-        # Initialize simulation variables
-        self.mouse_grid_pos = None
+        self.grid_size = grid_size
+        self.num_tasks = num_tasks
+        self.nearest_task = nearest_task  # New parameter
 
         # Initialize fonts
         self.font_size = 20
@@ -36,93 +31,34 @@ class SearchSimulation(SimulationBase):
         self.font_medium = pygame.font.SysFont(None, int(self.font_size * 1.2))
         self.font_large = pygame.font.SysFont(None, int(self.font_size * 1.5))
 
-        # Start button
-        self.update_start_button()
+        # Initialize clock for controlling animation speed
+        self.clock = pygame.time.Clock()
 
-        # Initialize environment and robot
-        self.initialize_environment()
+        # Start and Reset buttons
+        self.update_buttons()
 
-        # Initialize robot
-        self.robot = RobotAgent(self.start_pos, algorithm=self.algorithm)
+        # Generate environment and agent
+        self.reset_simulation()
 
-        # Set animation_started to False so the robot waits for the Start button
-        self.animation_started = False
+        # Variables for UI
+        self.mouse_grid_pos = None
 
-        # Calculate initial path (but don't start moving yet)
-        self.calculate_initial_path()
-
-    def initialize_environment(self):
-        # Define room and door positions
-        self.room_start = (4, 4)
-        self.room_end = (self.grid_size - 5, self.grid_size - 5)
-        self.door_position = (self.grid_size // 2, self.room_start[1])  # Door at the top wall
-
-        # Create grid and obstacles
-        env = GridEnvironment(self.grid_size, self.room_start, self.room_end, self.door_position)
-        self.grid = env.grid
-        self.obstacles = env.obstacles
-
-        # Starting position
-        self.start_pos = (self.grid_size // 2, self.grid_size // 2)
-
-        # Generate tasks
-        if self.task_positions is not None:
-            num_tasks = len(self.task_positions)
-        else:
-            num_tasks = 3  # Default number of tasks
-
-        self.tasks = env.generate_tasks(num_tasks, self.start_pos, self.task_positions)
-        self.task_order = deque(self.tasks.keys())
-
-    def update_start_button(self):
+    def update_buttons(self):
         window_width, window_height = self.screen.get_size()
-        # Position the start button at the bottom right corner
+        # Position the start button
         button_width = 100
         button_height = 40
         margin = 10  # Margin from the edges
         button_x = window_width - PANEL_WIDTH - button_width - margin
         button_y = window_height - button_height - margin
-        button_rect = pygame.Rect(button_x, button_y, button_width, button_height)
-        self.start_button = Button(button_rect, LIGHT_GRAY, "Start", BLACK, self.font_medium)
+        self.start_button = Button(pygame.Rect(button_x, button_y, button_width, button_height),
+                                   LIGHT_GRAY, "Start", BLACK, self.font_medium)
 
-    def calculate_initial_path(self):
-        if self.task_order:
-            self.robot.current_task = self.task_order[0]  # Do not pop yet
-            current_task = self.tasks[self.robot.current_task]
-
-            # Block uncompleted tasks (excluding current task)
-            blocked_positions = set(
-                task_info['position'] for task_name, task_info in self.tasks.items()
-                if not task_info['completed'] and task_name != self.robot.current_task
-            )
-
-            self.robot.path = self.robot.find_path(
-                self.robot.position, current_task['position'], self.grid, blocked_positions, self.grid_size
-            )
-
-            if self.robot.path is None:
-                print(f"No path found to {self.robot.current_task} using {self.algorithm.upper()}")
-                self.quit()
-        else:
-            self.robot.path = []
-            self.robot.current_task = None
-
-    def reset_simulation(self):
-        # Initialize environment
-        self.initialize_environment()
-
-        # Initialize robot
-        self.robot = RobotAgent(self.start_pos, algorithm=self.algorithm)
-
-        # Reset animation state
-        self.animation_started = True  # Start the animation immediately upon reset
-
-        # Calculate initial path
-        self.calculate_initial_path()
-
-        # Pop the first task now that simulation is starting
-        if self.task_order:
-            self.task_order.popleft()
+        # Position the reset button
+        reset_button_x = button_x
+        reset_button_y = button_y - button_height - margin
+        self.reset_button = Button(pygame.Rect(reset_button_x, reset_button_y, button_width, button_height),
+                                   LIGHT_GRAY, "Reset", BLACK, self.font_medium)
 
     def handle_events(self):
         for event in pygame.event.get():
@@ -131,7 +67,15 @@ class SearchSimulation(SimulationBase):
 
             if event.type == pygame.MOUSEBUTTONDOWN:
                 if self.start_button.is_clicked(event.pos):
-                    # Reset and restart the simulation
+                    self.animation_started = True
+                    # Find initial path when start button is clicked
+                    self.agent.find_initial_path(self.grid)
+                    if not self.agent.path:
+                        print(f"No path found using {self.algorithm.upper()}")
+                        self.animation_started = False
+                    else:
+                        self.path_length = len(self.agent.path_traveled) + len(self.agent.path)
+                elif self.reset_button.is_clicked(event.pos):
                     self.reset_simulation()
 
             # Exit on pressing ESC key
@@ -150,6 +94,29 @@ class SearchSimulation(SimulationBase):
                 else:
                     self.mouse_grid_pos = None  # Reset if mouse is outside the grid
 
+    def reset_simulation(self):
+        # Generate new environment and reset agent
+        self.env = GridEnvironment(self.grid_size, num_tasks=self.num_tasks)
+        self.grid = self.env.get_grid()
+        self.tasks = self.env.get_tasks()
+        # Keep a copy of all tasks and assign numbers
+        self.all_tasks = self.tasks.copy()
+        self.task_numbers = {task: i + 1 for i, task in enumerate(self.all_tasks)}
+        # Set cell size
+        self.cell_size = min((DEFAULT_WINDOW_WIDTH - PANEL_WIDTH) // self.grid_size,
+                             DEFAULT_WINDOW_HEIGHT // self.grid_size)
+        self.margin = 1
+        # Set start position
+        self.start_pos = self.env.get_start_position()
+        # Initialize agent
+        self.agent = RobotAgent(self.start_pos, self.tasks.copy(), algorithm=self.algorithm,
+                                nearest_task=self.nearest_task)
+        self.animation_started = False
+        self.agent.path_traveled = []
+        self.agent.path = []
+        self.agent.completed_tasks = []
+        self.path_length = None
+
     def update(self):
         # Handle window resize
         window_width, window_height = self.screen.get_size()
@@ -165,12 +132,18 @@ class SearchSimulation(SimulationBase):
         self.font_large = pygame.font.SysFont(None, int(self.font_size * 1.5))
 
         self.start_button.font = self.font_medium
+        self.reset_button.font = self.font_medium
 
-        # Update start button position on resize
-        self.update_start_button()
+        # Update button positions on resize
+        self.update_buttons()
 
-        # Update robot
-        self.update_robot()
+        if self.animation_started:
+            self.agent.move()
+            # Update path length
+            self.path_length = len(self.agent.path_traveled) + len(self.agent.path)
+            # Stop the simulation when all tasks are completed
+            if len(self.agent.completed_tasks) == len(self.tasks):
+                self.animation_started = False
 
     def draw(self):
         self.screen.fill(WHITE)
@@ -181,40 +154,32 @@ class SearchSimulation(SimulationBase):
         CELL_SIZE = self.cell_size
         MARGIN = self.margin
 
-        # Draw grid
+        # Draw the grid
         for y in range(self.grid_size):
             for x in range(self.grid_size):
                 rect = pygame.Rect(
                     x * CELL_SIZE, y * CELL_SIZE, CELL_SIZE - MARGIN, CELL_SIZE - MARGIN
                 )
-                # Draw obstacles
                 if self.grid[y][x] == 1:
-                    pygame.draw.rect(self.screen, BROWN, rect)
+                    pygame.draw.rect(self.screen, BLACK, rect)
                 else:
                     pygame.draw.rect(self.screen, GRAY, rect)
 
-        # Draw tasks
-        for task_name, task_info in self.tasks.items():
-            x, y = task_info['position']
+        # Draw all tasks (both completed and uncompleted)
+        for task in self.all_tasks:
+            tx, ty = task
             rect = pygame.Rect(
-                x * CELL_SIZE, y * CELL_SIZE, CELL_SIZE - MARGIN, CELL_SIZE - MARGIN
+                tx * CELL_SIZE, ty * CELL_SIZE, CELL_SIZE - MARGIN, CELL_SIZE - MARGIN
             )
-            color = GREEN if task_info['completed'] else PURPLE
-            pygame.draw.rect(self.screen, color, rect)
-
-            # Label the task with its number
-            task_number = ''.join(filter(str.isdigit, task_name))
-            number_text = self.font_small.render(task_number, True, BLACK)
-            number_rect = number_text.get_rect(center=rect.center)
-            self.screen.blit(number_text, number_rect)
-
-        # Draw the path traversed by the robot
-        for pos in self.robot.path_traveled:
-            x, y = pos
-            rect = pygame.Rect(
-                x * CELL_SIZE, y * CELL_SIZE, CELL_SIZE - MARGIN, CELL_SIZE - MARGIN
-            )
-            pygame.draw.rect(self.screen, YELLOW, rect)
+            if task in self.agent.completed_tasks:
+                pygame.draw.rect(self.screen, GREEN, rect)
+            else:
+                pygame.draw.rect(self.screen, RED, rect)
+            # Draw task number
+            task_number = self.task_numbers[task]
+            text_surface = self.font_small.render(str(task_number), True, BLACK)
+            text_rect = text_surface.get_rect(center=rect.center)
+            self.screen.blit(text_surface, text_rect)
 
         # Draw right panel background
         panel_rect = pygame.Rect(self.grid_size * CELL_SIZE, 0, PANEL_WIDTH, self.screen.get_height())
@@ -223,88 +188,60 @@ class SearchSimulation(SimulationBase):
         # Draw UI elements on the right panel
         self.draw_ui(panel_rect.x + 20, 20)
 
-        # Draw Start button
+        # Draw Start and Reset buttons
         self.start_button.draw(self.screen)
+        self.reset_button.draw(self.screen)
 
-        # Draw robot
-        self.draw_robot()
+        # Draw the agent
+        self.draw_agent()
 
     def draw_ui(self, panel_x, y_offset):
-        # Display Robot Status
-        status_text = self.font_medium.render("Robot Status", True, BLACK)
+        # Display Agent Status
+        status_text = self.font_medium.render("Agent Status", True, BLACK)
         self.screen.blit(status_text, (panel_x, y_offset))
         y_offset += int(self.font_size * 1.5)
 
-        position_text = self.font_small.render(f"Position: {self.robot.position}", True, BLACK)
+        position_text = self.font_small.render(f"Position: {self.agent.position}", True, BLACK)
         self.screen.blit(position_text, (panel_x, y_offset))
         y_offset += int(self.font_size)
 
-        if self.robot.current_task and self.animation_started:
-            task_text = self.font_small.render(f"Moving to {self.robot.current_task}", True, BLACK)
-        elif not self.animation_started:
-            task_text = self.font_small.render("Press Start to Begin", True, BLACK)
+        if self.animation_started:
+            status_text = self.font_small.render("Status: Moving", True, BLACK)
         else:
-            task_text = self.font_small.render("No more tasks", True, BLACK)
-        self.screen.blit(task_text, (panel_x, y_offset))
+            status_text = self.font_small.render("Status: Idle", True, BLACK)
+        self.screen.blit(status_text, (panel_x, y_offset))
         y_offset += int(self.font_size * 1.5)
+
+        # Display Path Length
+        if self.path_length is not None:
+            path_length_text = self.font_small.render(f"Path Length: {self.path_length}", True, BLACK)
+            self.screen.blit(path_length_text, (panel_x, y_offset))
+            y_offset += int(self.font_size)
+
+        # Display Algorithm Used
+        algorithm_text = self.font_small.render(f"Algorithm: {self.algorithm.upper()}", True, BLACK)
+        self.screen.blit(algorithm_text, (panel_x, y_offset))
+        y_offset += int(self.font_size)
+
+        # Display Tasks Remaining
+        tasks_remaining = len(self.tasks) - len(self.agent.completed_tasks)
+        tasks_remaining_text = self.font_small.render(f"Tasks Remaining: {tasks_remaining}", True, BLACK)
+        self.screen.blit(tasks_remaining_text, (panel_x, y_offset))
+        y_offset += int(self.font_size)
 
         # Display Mouse Grid Position
         if self.mouse_grid_pos is not None:
             mouse_pos_text = self.font_small.render(f"Cursor Position: {self.mouse_grid_pos}", True, BLACK)
             self.screen.blit(mouse_pos_text, (panel_x, y_offset))
-            y_offset += int(self.font_size * 1.5)
+            y_offset += int(self.font_size)
         else:
-            y_offset += int(self.font_size * 1.5)
-
-        # Display Task Status
-        task_status_text = self.font_medium.render("Task Status", True, BLACK)
-        self.screen.blit(task_status_text, (panel_x, y_offset))
-        y_offset += int(self.font_size * 1.5)
-
-        for task_name in self.tasks.keys():
-            status = "Completed" if self.tasks[task_name]['completed'] else "Pending"
-            text = self.font_small.render(f"{task_name}: {status}", True, BLACK)
-            self.screen.blit(text, (panel_x, y_offset))
             y_offset += int(self.font_size)
 
-    def update_robot(self):
-        if self.animation_started:
-            # Move the robot
-            self.robot.move()
-
-            # Check if task is completed
-            if self.robot.current_task and self.robot.position == self.tasks[self.robot.current_task]['position']:
-                self.tasks[self.robot.current_task]['completed'] = True
-                self.robot.tasks_completed.append(self.robot.current_task)
-                if self.task_order:
-                    self.robot.current_task = self.task_order.popleft()
-                    current_task = self.tasks[self.robot.current_task]
-
-                    # Block uncompleted tasks (excluding current task)
-                    blocked_positions = set(
-                        task_info['position'] for task_name, task_info in self.tasks.items()
-                        if not task_info['completed'] and task_name != self.robot.current_task
-                    )
-
-                    self.robot.path = self.robot.find_path(
-                        self.robot.position, current_task['position'], self.grid, blocked_positions, self.grid_size
-                    )
-                    if self.robot.path is None:
-                        print(f"No path found to {self.robot.current_task} using {self.algorithm.upper()}")
-                        self.quit()
-                else:
-                    self.robot.path = []
-                    self.robot.current_task = None
-
-            # Stop animation if no path remains
-            if not self.robot.path and not self.robot.current_task:
-                self.animation_started = False
-
-    def draw_robot(self):
-        # Draw robot on top of the path
+    def draw_agent(self):
+        # Draw agent on top of the grid
         CELL_SIZE = self.cell_size
         MARGIN = self.margin
-        x, y = self.robot.position
+        x, y = self.agent.position
         rect = pygame.Rect(
             x * CELL_SIZE, y * CELL_SIZE, CELL_SIZE - MARGIN, CELL_SIZE - MARGIN
         )
@@ -322,7 +259,6 @@ class SearchSimulation(SimulationBase):
     def quit(self):
         """Exit the simulation."""
         self.running = False
-
 
 class Button:
     def __init__(self, rect, color, text, text_color, font):

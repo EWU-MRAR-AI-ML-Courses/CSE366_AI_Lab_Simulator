@@ -1,4 +1,4 @@
-# examples/main.py
+# examples/main_robot_nearest.py
 
 import sys
 import os
@@ -14,7 +14,7 @@ from modules.simulations.search_simulation import SearchSimulation
 from modules.utils.constants import DEFAULT_WINDOW_WIDTH, DEFAULT_WINDOW_HEIGHT
 
 def main():
-    parser = argparse.ArgumentParser(description='Robot Task Simulation (Task Order Based)')
+    parser = argparse.ArgumentParser(description='Robot Task Simulation (Nearest Task First)')
     parser.add_argument('--algorithm', type=str, default='astar',
                         choices=['dfs', 'bfs', 'ucs', 'astar'],
                         help='Search algorithm to use (default: astar)')
@@ -28,9 +28,9 @@ def main():
 
     pygame.init()
     screen = pygame.display.set_mode((DEFAULT_WINDOW_WIDTH, DEFAULT_WINDOW_HEIGHT), pygame.RESIZABLE)
-    pygame.display.set_caption("Robot Task Simulation (Task Order Based)")
+    pygame.display.set_caption("Robot Task Simulation (Nearest Task First)")
 
-    sim = SearchSimulation(screen, algorithm=algorithm, grid_size=grid_size, num_tasks=num_tasks)
+    sim = SearchSimulation(screen, algorithm=algorithm, grid_size=grid_size, num_tasks=num_tasks, nearest_task=True)
     sim.run()
 
 if __name__ == "__main__":
