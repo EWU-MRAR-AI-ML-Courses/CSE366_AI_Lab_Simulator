@@ -152,7 +152,7 @@ python main.py
 ```
 #### Example Simulation
 
-[![Video Demonstration](\images\search.gif)](https://drive.google.com/file/d/1Ak-BdFxOOiAgpmXdTOXY2mKylmp7K_Oj/view?usp=sharing)
+![Video Demonstration](\images\search.gif)(https://drive.google.com/file/d/1Ak-BdFxOOiAgpmXdTOXY2mKylmp7K_Oj/view?usp=sharing)
 
 *Click on the image above to watch the video demonstration.*
 
